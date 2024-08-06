@@ -103,6 +103,7 @@ sap_config.qgs
 sap_config.qgs~
 
 config.env
+.env
 
 sslcert
 

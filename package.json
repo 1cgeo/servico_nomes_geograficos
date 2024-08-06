@@ -12,13 +12,7 @@
     "npm": ">=5.4.2"
   },
   "scripts": {
-    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
-    "config": "node create_config.js",
-    "build": "node create_build.js",
-    "create-docs": "node server/create_documentation.js",
-    "start": "pm2 start server/src/index.js --name servico-edicao",
-    "start-https": "pm2 start server/src/index.js --name servico-edicao-https -- --https ",
-    "start-dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run start\""
+    "start": "node src/index.js"
   },
   "keywords": [
     "Nomes geográficos",
@@ -31,6 +25,7 @@
     "url": "https://github.com/dsgoficial/servico_nomes_geograficos/issues"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "pg-promise": "^11.9.1"

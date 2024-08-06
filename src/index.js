@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const pgp = require('pg-promise')();
+const cors = require("cors");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,13 +19,13 @@ const dbConfig = {
 
 const db = pgp(dbConfig);
 
-const MIN_SIMILARITY = 0.4; 
+app.use(cors());
 
-app.get('/busca', async (req, res) => {
+app.get('/busca', async (req, res, next) => {
   const { q, lat, lon } = req.query;
     
-    if (!q || q.length < 2) {
-      return res.status(400).json({ error: 'Busca deve ter pelo menos 2 caracteres' });
+    if (!q || q.length < 3) {
+      return res.status(400).json({ error: 'Busca deve ter pelo menos 3 caracteres' });
     }
 
     if (!lat || !lon) {
@@ -55,16 +56,15 @@ app.get('/busca', async (req, res) => {
               ST_SetSRID(ST_MakePoint($3, $2), 4674)::geography
             ) AS distance_to_center
           FROM ng.nomes_geograficos
-          WHERE similarity(name, $1) >= $4
           ORDER BY name_similarity DESC, distance_to_center ASC
-          LIMIT 100
+          LIMIT 50
         )
         SELECT *,
           (name_similarity * 0.7 + (1 - LEAST(distance_to_center / 1000000, 1)) * 0.3) AS relevance_score
         FROM ranked_features
         ORDER BY relevance_score DESC
-        LIMIT 10
-      `, [q, centerLat, centerLon, MIN_SIMILARITY]);
+        LIMIT 5
+      `, [q, centerLat, centerLon]);
   
       res.json(result);
     } catch (error) {
