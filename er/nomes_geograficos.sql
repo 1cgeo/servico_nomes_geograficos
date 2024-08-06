@@ -5,12 +5,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA IF NOT EXISTS ng;
 
 CREATE TABLE ng.nomes_geograficos (
-	 id uuid NOT NULL DEFAULT uuid_generate_v4(),
+	id uuid NOT NULL DEFAULT uuid_generate_v4(),
     nome VARCHAR(255) NOT NULL,
     municipio VARCHAR(255),
     estado VARCHAR(255),
     tipo VARCHAR(255),
-    geom GEOMETRY(POINT, 4674) NOT NULL
+    geom GEOMETRY(POINT, 4674) NOT NULL,
+	CONSTRAINT nomes_geograficos_pk PRIMARY KEY (id)
 );
 
 CREATE INDEX idx_geographic_features_geometry ON ng.nomes_geograficos USING GIST (geom);
