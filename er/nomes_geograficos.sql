@@ -20,7 +20,7 @@ CREATE INDEX idx_geographic_features_type ON ng.nomes_geograficos (tipo);
 
 CREATE TABLE ng.edificacoes (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
-    nome VARCHAR(255) NOT NULL,
+    nome VARCHAR(255),
     municipio VARCHAR(255),
     estado VARCHAR(255),
     tipo VARCHAR(255),
