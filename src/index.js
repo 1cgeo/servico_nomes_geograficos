@@ -2,6 +2,7 @@ const cluster = require('cluster');
 const os = require('os');
 require('dotenv').config();
 const express = require('express');
+const { query, validationResult } = require('express-validator');
 const pgp = require('pg-promise')();
 const cors = require("cors");
 
@@ -144,6 +145,64 @@ if (cluster.isMaster) {
       }
     } catch (error) {
       console.error('Erro na query de feições:', error);
+      next(error);
+    }
+  });
+
+  app.get('/catalogo3d', [
+    query('q').optional().isString().trim().escape(),
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('nr_records').optional().isInt({ min: 1, max: 100 }).toInt()
+  ], async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+  
+    const { q, page = 1, nr_records = 10 } = req.query;
+    
+    const offset = (page - 1) * nr_records;
+    
+    try {
+      let countQuery = `SELECT COUNT(*) FROM ng.modelos_3d`;
+      let dataQuery = `
+        SELECT id, name, description, thumbnail, url, lon, lat, height, heading, pitch, roll, type, heightOffset, maximumScreenSpaceError, data_criacao
+        FROM ng.modelos_3d
+      `;
+      
+      const queryParams = [];
+      
+      if (q) {
+        const whereClause = `WHERE search_vector @@ plainto_tsquery('portuguese', $1)`;
+        countQuery += ` ${whereClause}`;
+        dataQuery += ` ${whereClause}`;
+        queryParams.push(q);
+      }
+      
+      dataQuery += `
+        ORDER BY 
+          CASE WHEN $${queryParams.length + 1} IS NOT NULL 
+            THEN ts_rank(search_vector, plainto_tsquery('portuguese', $${queryParams.length + 1})) 
+            ELSE 0 
+          END DESC,
+          data_criacao DESC
+        LIMIT $${queryParams.length + 2} OFFSET $${queryParams.length + 3}
+      `;
+      queryParams.push(q, nr_records, offset);
+  
+      const [totalCount, data] = await Promise.all([
+        db.one(countQuery, q ? [q] : []),
+        db.any(dataQuery, queryParams)
+      ]);
+  
+      res.json({
+        total: parseInt(totalCount.count),
+        page,
+        nr_records,
+        data
+      });
+    } catch (error) {
+      console.error('Erro na query do catálogo 3D:', error);
       next(error);
     }
   });
