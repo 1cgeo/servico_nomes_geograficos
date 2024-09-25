@@ -34,11 +34,14 @@ CREATE TABLE ng.edificacoes (
 CREATE INDEX idx_edificacoes_geometry ON ng.edificacoes USING GIST (geom);
 CREATE INDEX idx_edificacoes_altitude ON ng.edificacoes (altitude_base, altitude_topo);
 
-CREATE TABLE ng.modelos_3d (
+CREATE TABLE ng.catalago_3d (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    municipio VARCHAR(255),
+    estado VARCHAR(255),
     thumbnail VARCHAR(255),
+    palavras_chave TEXT[],
     url VARCHAR(255) NOT NULL,
     lon NUMERIC,
     lat NUMERIC,
@@ -54,21 +57,25 @@ CREATE TABLE ng.modelos_3d (
     CONSTRAINT modelos_3d_pk PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_modelos_3d_search_vector ON ng.modelos_3d USING GIN (search_vector);
-CREATE INDEX idx_modelos_3d_type ON ng.modelos_3d (type);
+CREATE INDEX idx_modelos_3d_data_criacao ON ng.modelos_3d (data_criacao DESC);
+CREATE INDEX idx_modelos_3d_search_vector ON ng.catalago_3d USING GIN (search_vector);
+CREATE INDEX idx_modelos_3d_type ON ng.catalago_3d (type);
 
-CREATE OR REPLACE FUNCTION ng.modelos_3d_search_vector_update() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION ng.catalago_3d_search_vector_update() RETURNS trigger AS $$
 BEGIN
   NEW.search_vector :=
     setweight(to_tsvector('portuguese', COALESCE(NEW.name, '')), 'A') ||
-    setweight(to_tsvector('portuguese', COALESCE(NEW.description, '')), 'B');
+    setweight(to_tsvector('portuguese', COALESCE(NEW.description, '')), 'B') ||
+    setweight(to_tsvector('portuguese', COALESCE(NEW.municipio, '')), 'C') ||
+    setweight(to_tsvector('portuguese', COALESCE(NEW.estado, '')), 'C') ||
+    setweight(to_tsvector('portuguese', COALESCE(array_to_string(NEW.palavras_chave, ' '), '')), 'B');
   RETURN NEW;
 END
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER modelos_3d_search_vector_update
-BEFORE INSERT OR UPDATE ON ng.modelos_3d
-FOR EACH ROW EXECUTE FUNCTION ng.modelos_3d_search_vector_update();
+BEFORE INSERT OR UPDATE ON ng.catalago_3d
+FOR EACH ROW EXECUTE FUNCTION ng.catalago_3d_search_vector_update();
 
 GRANT ALL PRIVILEGES ON DATABASE nomes_geograficos TO user_nomes_geograficos;
 GRANT ALL ON SCHEMA ng TO user_nomes_geograficos;

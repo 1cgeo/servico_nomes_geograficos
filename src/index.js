@@ -164,10 +164,11 @@ if (cluster.isMaster) {
     const offset = (page - 1) * nr_records;
     
     try {
-      let countQuery = `SELECT COUNT(*) FROM ng.modelos_3d`;
+      let countQuery = `SELECT COUNT(*) FROM ng.catalago_3d`;
       let dataQuery = `
-        SELECT id, name, description, thumbnail, url, lon, lat, height, heading, pitch, roll, type, heightOffset, maximumScreenSpaceError, data_criacao
-        FROM ng.modelos_3d
+      SELECT id, name, description, thumbnail, url, lon, lat, height, heading, pitch, roll, type, 
+             heightOffset, maximumScreenSpaceError, data_criacao, municipio, estado, palavras_chave
+        FROM ng.catalago_3d
       `;
       
       const queryParams = [];
