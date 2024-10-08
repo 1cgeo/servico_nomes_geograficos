@@ -34,7 +34,7 @@ CREATE TABLE ng.edificacoes (
 CREATE INDEX idx_edificacoes_geometry ON ng.edificacoes USING GIST (geom);
 CREATE INDEX idx_edificacoes_altitude ON ng.edificacoes (altitude_base, altitude_topo);
 
-CREATE TABLE ng.catalago_3d (
+CREATE TABLE ng.catalogo_3d (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -50,18 +50,18 @@ CREATE TABLE ng.catalago_3d (
     pitch NUMERIC,
     roll NUMERIC,
     type VARCHAR(50) NOT NULL,
-    heightOffset NUMERIC,
-    maximumScreenSpaceError NUMERIC,
+    heightoffset NUMERIC,
+    maximumscreenspaceerror NUMERIC,
     data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     search_vector tsvector,
-    CONSTRAINT modelos_3d_pk PRIMARY KEY (id)
+    CONSTRAINT catalogo_3d_pk PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_modelos_3d_data_criacao ON ng.modelos_3d (data_criacao DESC);
-CREATE INDEX idx_modelos_3d_search_vector ON ng.catalago_3d USING GIN (search_vector);
-CREATE INDEX idx_modelos_3d_type ON ng.catalago_3d (type);
+CREATE INDEX idx_catalogo_3d_data_criacao ON ng.catalogo_3d (data_criacao DESC);
+CREATE INDEX idx_catalogo_3d_search_vector ON ng.catalogo_3d USING GIN (search_vector);
+CREATE INDEX idx_catalogo_3d_type ON ng.catalogo_3d (type);
 
-CREATE OR REPLACE FUNCTION ng.catalago_3d_search_vector_update() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION ng.catalogo_3d_search_vector_update() RETURNS trigger AS $$
 BEGIN
   NEW.search_vector :=
     setweight(to_tsvector('portuguese', COALESCE(NEW.name, '')), 'A') ||
@@ -73,9 +73,9 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER modelos_3d_search_vector_update
-BEFORE INSERT OR UPDATE ON ng.catalago_3d
-FOR EACH ROW EXECUTE FUNCTION ng.catalago_3d_search_vector_update();
+CREATE TRIGGER catalogo_3d_search_vector_update
+BEFORE INSERT OR UPDATE ON ng.catalogo_3d
+FOR EACH ROW EXECUTE FUNCTION ng.catalogo_3d_search_vector_update();
 
 GRANT ALL PRIVILEGES ON DATABASE nomes_geograficos TO user_nomes_geograficos;
 GRANT ALL ON SCHEMA ng TO user_nomes_geograficos;
