@@ -167,7 +167,7 @@ if (cluster.isMaster) {
       let countQuery = `SELECT COUNT(*) FROM ng.catalogo_3d`;
       let dataQuery = `
       SELECT id, name, description, thumbnail, url, lon, lat, height, heading, pitch, roll, type, 
-             heightoffset, maximumscreenspaceerror, data_criacao, municipio, estado, palavras_chave
+             heightoffset, maximumscreenspaceerror, data_criacao, municipio, estado, palavras_chave, style
         FROM ng.catalogo_3d
       `;
       

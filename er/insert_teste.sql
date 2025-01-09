@@ -274,4 +274,45 @@ INSERT INTO ng.catalogo_3d (
     'Santa Maria', 'Rio Grande do Sul',
     ARRAY['1RCC']
 );
+
+INSERT INTO  ng.catalogo_3d(
+        name,
+        description,
+        municipio,
+        estado,
+        thumbnail,
+        palavras_chave,
+        url,
+        type,
+        style
+)
+VALUES
+(
+        'ESAO',
+        'Nuvem de pontos da Escola de Aperfeiçoamento de Oficiais',
+        'Rio de Janeiro',
+        'Rio de Janeiro',
+        '/esao/thumbnail.png',
+        '{esao,"escola de aperfeiçoamento de oficiais"}',
+        '/esao/tileset.json',
+        'Nuvem de Pontos',
+        '{
+                "color": {
+                        "conditions": [
+                               ["${POSITION}[2] < 7", "color(''lightgreen'')"],
+                                ["${POSITION}[2] < 7.5", "color(''green'')"],
+                                ["${POSITION}[2] < 8", "color(''yellowgreen'')"],
+                                ["${POSITION}[2] < 8.5", "color(''yellow'')"],
+                                ["${POSITION}[2] < 9", "color(''gold'')"],
+                                ["${POSITION}[2] < 9.5", "color(''orange'')"],
+                                ["${POSITION}[2] < 10", "color(''darkorange'')"],
+                                ["${POSITION}[2] < 10.5", "color(''red'')"],
+                                ["${POSITION}[2] < 11", "color(''white'')"],
+                                ["true", "color(''violet'')"]
+
+                        ]
+                },
+                "pointSize": 2
+        }'::jsonb
+);
  

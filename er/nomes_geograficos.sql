@@ -54,6 +54,7 @@ CREATE TABLE ng.catalogo_3d (
     maximumscreenspaceerror NUMERIC,
     data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     search_vector tsvector,
+    style JSONB,
     CONSTRAINT catalogo_3d_pk PRIMARY KEY (id)
 );
 
