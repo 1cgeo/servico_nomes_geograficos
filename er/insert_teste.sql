@@ -364,3 +364,19 @@ VALUES
         }'::jsonb
 );
  
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '3º Batalhão de Comunicações', 
+    'Modelo 3D em tiles do 3º Batalhão de Comunicações',
+    '/3bcom/thumbnail.png',
+    '/3bcom/tileset.json',
+    -51.21474144153603, -30.164513801781798, 1000,
+    'Tiles 3D',
+    35,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['3BCom']
+);
