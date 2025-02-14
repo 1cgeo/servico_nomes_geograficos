@@ -380,3 +380,83 @@ INSERT INTO ng.catalogo_3d (
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['3BCom']
 );
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '8º Esquadrão de Cavalaria Mecanizado', 
+    'Modelo 3D em tiles do 8º Esquadrão de Cavalaria Mecanizado',
+    '/8esqdcmec/thumbnail.png',
+    '/8esqdcmec/tileset.json',
+    -51.22519137901395, -30.16414193474354, 1000,
+    'Tiles 3D',
+    35,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['8EsqdCMec']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    'Colégio Militar de Porto Alegre', 
+    'Modelo 3D em tiles do Colégio Militar de Porto Alegre',
+    '/cmpa/thumbnail.png',
+    '/cmpa/tileset.json',
+    -51.21348839826647, -30.038776255632662, 1000,
+    'Tiles 3D',
+    35,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['CMPA']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    'Policlínica Militar de Porto Alegre', 
+    'Modelo 3D em tiles da Policlínica Militar de Porto Alegre',
+    '/pmpa/thumbnail.png',
+    '/pmpa/tileset.json',
+    -51.219517270235016, -30.03771310615151, 1000,
+    'Tiles 3D',
+    35,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['PMPA']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '18º Batalhão de Infantaria Motorizado', 
+    'Modelo 3D em tiles do 18º Batalhão de Infantaria Motorizado',
+    '/18bi/thumbnail.png',
+    '/18bi/tileset.json',
+    -51.140329353635465, -29.81349270679423, 1000,
+    'Tiles 3D',
+    35,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['18BI']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '19º Batalhão de Infantaria Motorizado', 
+    'Modelo 3D em tiles do 19º Batalhão de Infantaria Motorizado',
+    '/19bi/thumbnail.png',
+    '/19bi/tileset.json',
+    -51.14699023740182, -29.777035526702182, 1000,
+    'Tiles 3D',
+    35,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['19BI']
+);
