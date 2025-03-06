@@ -60,7 +60,7 @@ INSERT INTO ng.catalogo_3d (
     '/pcl/tileset.json',
     -44.47332385414955, -22.43976556982974, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Resende', 'Rio de Janeiro',
     ARRAY['pcl', 'aman', 'agulhas negras']
@@ -77,7 +77,7 @@ INSERT INTO ng.catalogo_3d (
     '/expoex/tileset.json',
     -51.1819601,-29.8555187, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Esteio', 'Rio Grande do Sul',
     ARRAY['Expointer']
@@ -93,7 +93,7 @@ INSERT INTO ng.catalogo_3d (
     '/santa-tereza/tileset.json',
     -51.735423440934206, -29.172627292860327,  1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Santa Tereza', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -109,7 +109,7 @@ INSERT INTO ng.catalogo_3d (
     '/mucum/tileset.json',
     -51.87051260777422, -29.166837165726406, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Muçum', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -125,7 +125,7 @@ INSERT INTO ng.catalogo_3d (
     '/roca-sales/tileset.json',
     -51.880902752339786, -29.284650148971576, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Roca Sales', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -141,7 +141,7 @@ INSERT INTO ng.catalogo_3d (
     '/arroio-do-meio/tileset.json',
     -51.94302093562379, -29.402908542612245, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Arroio do Meio', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -157,7 +157,7 @@ INSERT INTO ng.catalogo_3d (
     '/lajeado/tileset.json',
     -51.963585309510755, -29.468893479165846, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Lajeado', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -173,7 +173,7 @@ INSERT INTO ng.catalogo_3d (
     '/estrela/tileset.json',
     -51.95899413146255, -29.473797198870912, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Estrela', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -189,7 +189,7 @@ INSERT INTO ng.catalogo_3d (
     '/cruzeiro-do-sul/tileset.json',
     -51.984399374677594, -29.51332092981287, 1000,
     'Tiles 3D',
-    35,
+    0,
     2.0,
     'Cruzeiro do Sul', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -205,7 +205,7 @@ INSERT INTO ng.catalogo_3d (
     '/bom-retiro-do-sul/tileset.json',
     -51.943428437067645, -29.607153616620362, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Bom Retiro do Sul', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -221,7 +221,7 @@ INSERT INTO ng.catalogo_3d (
     '/colinas/tileset.json',
     -51.87268457683399, -29.385153073885824, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Colinas', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -237,7 +237,7 @@ INSERT INTO ng.catalogo_3d (
     '/encantado/tileset.json',
     -51.8587166195042, -29.229346235086567, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Encantado', 'Rio Grande do Sul',
     ARRAY['Taquari', 'Operação', 'Enchente']
@@ -253,7 +253,7 @@ INSERT INTO ng.catalogo_3d (
     '/auditorio-1cgeo/tileset.json',
     -51.219544297545646, -30.067747144201228, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['1CGEO', '1º CGEO', '1º Centro de Geoinformação', '1ª DL', 'CCGB']
@@ -269,7 +269,7 @@ INSERT INTO ng.catalogo_3d (
     '/predio-comando-1cgeo/tileset.json',
     -51.220535040823975, -30.06715964469566, 1000,
     'Tiles 3D',
-    35,
+    0,
     16.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['1CGEO', '1º CGEO', '1º Centro de Geoinformação', '1ª DL', 'CCGB']
@@ -285,7 +285,7 @@ INSERT INTO ng.catalogo_3d (
     '/ca-sul/tileset.json',
     -53.84556781353387, -29.73566000369945, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Santa Maria', 'Rio Grande do Sul',
     ARRAY['CA-SUL', 'SIMACEM']
@@ -301,7 +301,7 @@ INSERT INTO ng.catalogo_3d (
     '/4blog/tileset.json',
     -53.8500754298179, -29.719992364759964, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Santa Maria', 'Rio Grande do Sul',
     ARRAY['4BLog']
@@ -317,7 +317,7 @@ INSERT INTO ng.catalogo_3d (
     '/1rcc/tileset.json',
     -53.8496936257103, -29.71498606008087, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Santa Maria', 'Rio Grande do Sul',
     ARRAY['1RCC']
@@ -375,7 +375,7 @@ INSERT INTO ng.catalogo_3d (
     '/3bcom/tileset.json',
     -51.21474144153603, -30.164513801781798, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['3BCom']
@@ -391,7 +391,7 @@ INSERT INTO ng.catalogo_3d (
     '/8esqdcmec/tileset.json',
     -51.22519137901395, -30.16414193474354, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['8EsqdCMec']
@@ -407,7 +407,7 @@ INSERT INTO ng.catalogo_3d (
     '/cmpa/tileset.json',
     -51.21348839826647, -30.038776255632662, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['CMPA']
@@ -423,7 +423,7 @@ INSERT INTO ng.catalogo_3d (
     '/pmpa/tileset.json',
     -51.219517270235016, -30.03771310615151, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['PMPA']
@@ -439,7 +439,7 @@ INSERT INTO ng.catalogo_3d (
     '/18bi/tileset.json',
     -51.140329353635465, -29.81349270679423, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['18BI']
@@ -455,8 +455,56 @@ INSERT INTO ng.catalogo_3d (
     '/19bi/tileset.json',
     -51.14699023740182, -29.777035526702182, 1000,
     'Tiles 3D',
-    35,
+    0,
     1.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['19BI']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '3° Centro de Gestão, Contabilidade e Finanças do Exército', 
+    'Modelo 3D em tiles do 3° Centro de Gestão, Contabilidade e Finanças do Exército',
+    '/cgcfex/thumbnail.png',
+    '/cgcfex/tileset.json',
+    -51.22178079790531, -30.062676420863806, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['CGCFEx']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '3° Batalhão de Polícia do Exército', 
+    'Modelo 3D em tiles do 3° Batalhão de Polícia do Exército',
+    '/3bpe/thumbnail.png',
+    '/3bpe/tileset.json',
+    -51.22268381796232, -30.06392566523734, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['3BPE']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '3° Batalhão de Suprimento', 
+    'Modelo 3D em tiles do 3° Batalhão de Suprimento',
+    '/3bsup/thumbnail.png',
+    '/3bsup/tileset.json',
+    -51.2768643811893, -29.8917123986599, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['3BSup']
 );
