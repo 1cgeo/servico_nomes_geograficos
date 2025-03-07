@@ -508,3 +508,51 @@ INSERT INTO ng.catalogo_3d (
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['3BSup']
 );
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '6° Esquadrão de Cavalaria Mecanizado', 
+    'Modelo 3D em tiles do 6° Esquadrão de Cavalaria Mecanizado',
+    '/6esqdcmec/thumbnail.png',
+    '/6esqdcmec/tileset.json',
+    -53.8444734840243, -29.712557965801626, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['6EsqdCMec']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '29° Batalhão de Infantaria Blindado', 
+    'Modelo 3D em tiles do 29° Batalhão de Infantaria Blindado',
+    '/29bib/thumbnail.png',
+    '/29bib/tileset.json',
+    -53.84896554024129, -29.723712968862202, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['29BIB']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    'Centro de Instrução de Blindados', 
+    'Modelo 3D em tiles do Centro de Instrução de Blindados',
+    '/cibld/thumbnail.png',
+    '/cibld/tileset.json',
+    -53.84813500939526, -29.71764939938415, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Porto Alegre', 'Rio Grande do Sul',
+    ARRAY['CIBld']
+);
