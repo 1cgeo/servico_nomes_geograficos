@@ -169,8 +169,8 @@ INSERT INTO ng.catalogo_3d (
 ) VALUES (
     'Estrela', 
     'Modelo 3D em tiles da Região de Estrela afetada pelas enchentes de maio de 2024',
-    '/estrela/thumbnail.png',
-    '/estrela/tileset.json',
+    '/estrela-merge/thumbnail.png',
+    '/estrela-merge/tileset.json',
     -51.95899413146255, -29.473797198870912, 1000,
     'Tiles 3D',
     0,
@@ -555,4 +555,68 @@ INSERT INTO ng.catalogo_3d (
     1.0,
     'Porto Alegre', 'Rio Grande do Sul',
     ARRAY['CIBld']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    '2ª Bateria de Artilharia Antiaérea', 
+    'Modelo 3D em tiles da 2ª Bateria de Artilharia Antiaérea',
+    '/2biaaae/thumbnail.png',
+    '/2biaaae/tileset.json',
+    -55.53557102538833, -30.883787195161897, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Sant''Ana do Livramento', 'Rio Grande do Sul',
+    ARRAY['2BIAAAE', 'Op FOGO']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    'Ponte Rio Ibirapuitã com BR 377', 
+    'Modelo 3D em tiles da Ponte Rio Ibirapuitã com BR 377',
+    '/ponte377/thumbnail.png',
+    '/ponte377/tileset.json',
+    -55.78310517937053, -29.805494325391436, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Alegrete', 'Rio Grande do Sul',
+    ARRAY['Ponte', 'Op FOGO']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    'Ponte Borges de Medeiros', 
+    'Modelo 3D em tiles da Ponte Borges de Medeiros',
+    '/ponte-borges-de-medeiros/thumbnail.png',
+    '/ponte-borges-de-medeiros/tileset.json',
+    -55.77453032939263, -29.784927041729613, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Alegrete', 'Rio Grande do Sul',
+    ARRAY['Ponte', 'Op FOGO']
+);
+
+INSERT INTO ng.catalogo_3d (
+    name, description, thumbnail, url, lon, lat, height, 
+    type, heightoffset, maximumscreenspaceerror, municipio, estado, palavras_chave
+) VALUES (
+    'Ponte General Osório', 
+    'Modelo 3D em tiles da Ponte General Osório',
+    '/ponte-general-osorio/thumbnail.png',
+    '/ponte-general-osorio/tileset.json',
+    -55.4816627677828, -29.596464009914392, 1000,
+    'Tiles 3D',
+    0,
+    1.0,
+    'Manoel Viana', 'Rio Grande do Sul',
+    ARRAY['Ponte', 'Op FOGO']
 );
