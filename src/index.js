@@ -5,6 +5,9 @@ const express = require('express');
 const { query, validationResult } = require('express-validator');
 const pgp = require('pg-promise')();
 const cors = require("cors");
+const fs = require('fs');
+const path = require('path');
+const logFile = path.join(__dirname, 'api-access.log');
 
 const numCPUs = os.cpus().length;
 const numWorkers = Math.min(Math.floor(numCPUs / 3), 8);
@@ -37,6 +40,22 @@ if (cluster.isMaster) {
   const db = pgp(dbConfig);
 
   app.use(cors());
+  app.use((req, res, next) => {
+    const url = req.originalUrl || req.url;
+    // if (
+    //   url.startsWith('/catalogo-ebgeo2') ||
+    //   url.startsWith('/busca') ||
+    //   url.startsWith('/feicoes') ||
+    //   url.startsWith('/catalogo3d')
+    // ) {
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'IP-desconhecido';
+      const logEntry = `[${new Date().toISOString()}] IP: ${ip} - ${req.method} ${url}\n`;
+      fs.appendFile(logFile, logEntry, { flag: 'a' }, (err) => {
+        if (err) console.error('Erro ao escrever log:', err);
+      });
+    // }
+    next();
+  });
 
   app.get('/busca', async (req, res, next) => {
     const { q, lat, lon } = req.query;
