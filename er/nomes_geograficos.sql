@@ -82,5 +82,3 @@ GRANT ALL PRIVILEGES ON DATABASE nomes_geograficos TO user_nomes_geograficos;
 GRANT ALL ON SCHEMA ng TO user_nomes_geograficos;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ng TO user_nomes_geograficos;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ng TO user_nomes_geograficos;
-
-
