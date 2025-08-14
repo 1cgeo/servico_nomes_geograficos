@@ -5,131 +5,57 @@ const express = require('express');
 const { query, validationResult } = require('express-validator');
 const pgp = require('pg-promise')();
 const cors = require("cors");
-const georefPdfRouter = require('./georefPdf');
-const streetviewRouter = require('./streetview');
+const fs = require('fs');
+const path = require('path');
+const logFile = path.join(__dirname, 'api-access.log');
 
-// ===== CONFIGURAÇÕES CLUSTER =====
 const numCPUs = os.cpus().length;
-const numWorkers = Math.min(Math.floor(numCPUs / 2), 8);
-const RESTART_DELAY = 2000;
-const MAX_RESTARTS_PER_HOUR = 10;
-
-// Controle de restarts por worker
-const workerRestarts = new Map();
-
-const { 
-  validateCoordinates, 
-  validateAltitude 
-} = require('./validators');
+const numWorkers = Math.min(Math.floor(numCPUs / 3), 8);
 
 if (cluster.isMaster) {
-  console.log(`Master ${process.pid} iniciando com ${numWorkers} workers`);
+  console.log(`Master ${process.pid} is running`);
 
-  // Função para reiniciar worker com controle de rate
-  function restartWorker(workerId) {
-    const now = Date.now();
-    const oneHourAgo = now - (60 * 60 * 1000);
-    
-    // Limpar restarts antigos
-    const restarts = workerRestarts.get(workerId) || [];
-    const recentRestarts = restarts.filter(time => time > oneHourAgo);
-    
-    if (recentRestarts.length >= MAX_RESTARTS_PER_HOUR) {
-      console.error(`Worker ${workerId} excedeu limite de restarts por hora. Não reiniciando.`);
-      return;
-    }
-    
-    // Registrar restart
-    recentRestarts.push(now);
-    workerRestarts.set(workerId, recentRestarts);
-    
-    // Reiniciar após delay
-    setTimeout(() => {
-      console.log(`Reiniciando worker ${workerId}...`);
-      cluster.fork();
-    }, RESTART_DELAY);
-  }
-
-  // Fork inicial dos workers
+  // Fork workers.
   for (let i = 0; i < numWorkers; i++) {
     cluster.fork();
   }
 
   cluster.on('exit', (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} morreu (code: ${code}, signal: ${signal})`);
-    
-    if (!worker.exitedAfterDisconnect) {
-      restartWorker(worker.id);
-    }
+    console.log(`worker ${worker.process.pid} died`);
   });
-
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('Master recebeu SIGTERM, iniciando graceful shutdown...');
-    
-    for (const id in cluster.workers) {
-      cluster.workers[id].kill('SIGTERM');
-    }
-    
-    setTimeout(() => {
-      console.log('Forçando saída do master...');
-      process.exit(0);
-    }, 10000);
-  });
-
-  process.on('SIGINT', () => {
-    console.log('Master recebeu SIGINT, iniciando graceful shutdown...');
-    
-    for (const id in cluster.workers) {
-      cluster.workers[id].kill('SIGINT');
-    }
-    
-    setTimeout(() => {
-      process.exit(0);
-    }, 5000);
-  });
-
 } else {
-  // ===== WORKER PROCESS =====
-  
   const app = express();
   const port = process.env.PORT || 3000;
 
-  // ===== SETUP DB E CORS =====
   const dbConfig = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    max: Math.max(numWorkers * 3, 15), // Pool dimensionado para workers
-    min: 2, // Conexões mínimas
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-    allowExitOnIdle: true
+    max: 10,
+    idleTimeoutMillis: 30000
   };
 
   const db = pgp(dbConfig);
 
-  // Teste de conexão inicial
-  db.connect()
-    .then(obj => {
-      console.log(`Worker ${process.pid}: Conexão DB estabelecida`);
-      obj.done();
-    })
-    .catch(error => {
-      console.error(`Worker ${process.pid}: Erro conectando ao DB:`, error);
-      process.exit(1);
-    });
-
-  app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-    credentials: true
-  }));
-  
-  // Routers
-  app.use('/pdf', georefPdfRouter);
-  app.use('/streetview', streetviewRouter);
+  app.use(cors());
+  app.use((req, res, next) => {
+    const url = req.originalUrl || req.url;
+    // if (
+    //   url.startsWith('/catalogo-ebgeo2') ||
+    //   url.startsWith('/busca') ||
+    //   url.startsWith('/feicoes') ||
+    //   url.startsWith('/catalogo3d')
+    // ) {
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'IP-desconhecido';
+      const logEntry = `[${new Date().toISOString()}] IP: ${ip} - ${req.method} ${url}\n`;
+      fs.appendFile(logFile, logEntry, { flag: 'a' }, (err) => {
+        if (err) console.error('Erro ao escrever log:', err);
+      });
+    // }
+    next();
+  });
 
   app.get('/busca', async (req, res, next) => {
     const { q, lat, lon } = req.query;
@@ -142,9 +68,11 @@ if (cluster.isMaster) {
       return res.status(400).json({ error: 'Ponto central (lat, lon) é obrigatório' });
     }
 
-    const coordValidation = validateCoordinates(lat, lon);
-    if (!coordValidation.valid) {
-      return res.status(400).json({ error: coordValidation.error });
+    const centerLat = parseFloat(lat);
+    const centerLon = parseFloat(lon);
+
+    if (isNaN(centerLat) || isNaN(centerLon)) {
+      return res.status(400).json({ error: 'Ponto central inválido' });
     }
 
     try {
@@ -171,11 +99,11 @@ if (cluster.isMaster) {
         FROM ranked_features
         ORDER BY relevance_score DESC
         LIMIT 5
-      `, [q, coordValidation.lat, coordValidation.lon]);
+      `, [q, centerLat, centerLon]);
   
       res.json(result);
     } catch (error) {
-      console.error('Erro na query de busca:', error);
+      console.error('Erro na query:', error);
       next(error);
     }
   });
@@ -187,14 +115,12 @@ if (cluster.isMaster) {
       return res.status(400).json({ error: 'Coordenadas (lat, lon, z) são obrigatórias' });
     }
 
-    const coordValidation = validateCoordinates(lat, lon);
-    if (!coordValidation.valid) {
-      return res.status(400).json({ error: coordValidation.error });
-    }
+    const pointLat = parseFloat(lat);
+    const pointLon = parseFloat(lon);
+    const pointZ = parseFloat(z);
 
-    const altValidation = validateAltitude(z);
-    if (!altValidation.valid) {
-      return res.status(400).json({ error: altValidation.error });
+    if (isNaN(pointLat) || isNaN(pointLon) || isNaN(pointZ)) {
+      return res.status(400).json({ error: 'Coordenadas inválidas' });
     }
 
     try {
@@ -229,7 +155,7 @@ if (cluster.isMaster) {
         FROM intersecting_edificacoes
         ORDER BY z_distance ASC, xy_distance ASC
         LIMIT 1
-      `, [coordValidation.normalized.lon, coordValidation.normalized.lat, altValidation.normalized]);
+      `, [pointLon, pointLat, pointZ]);
   
       if (result.length === 0) {
         res.json({ message: 'Nenhuma edificação encontrada para as coordenadas fornecidas.' });
@@ -253,6 +179,7 @@ if (cluster.isMaster) {
     }
   
     const { q, page = 1, nr_records = 10 } = req.query;
+    
     const offset = (page - 1) * nr_records;
     
     try {
@@ -282,12 +209,12 @@ if (cluster.isMaster) {
         LIMIT $${queryParams.length + 2} OFFSET $${queryParams.length + 3}
       `;
       queryParams.push(q, nr_records, offset);
-
+  
       const [totalCount, data] = await Promise.all([
         db.one(countQuery, q ? [q] : []),
         db.any(dataQuery, queryParams)
       ]);
-
+  
       res.json({
         total: parseInt(totalCount.count),
         page,
@@ -299,68 +226,13 @@ if (cluster.isMaster) {
       next(error);
     }
   });
-
-  // ===== HEALTH CHECK =====
-  app.get('/status', async (req, res) => {
-    try {
-      // Teste rápido de DB
-      await db.one('SELECT 1 as test');
-      
-      res.json({
-        status: 'OK',
-        worker: process.pid,
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        db_status: 'connected'
-      });
-    } catch (error) {
-      res.status(503).json({
-        status: 'ERROR',
-        worker: process.pid,
-        db_status: 'disconnected',
-        error: error.message
-      });
-    }
+  
+  app.listen(port, () => {
+    console.log(`Worker ${process.pid}: Serviço de Nomes Geográficos iniciado na porta ${port}`);
   });
   
-  // ===== SERVER START =====
-  const server = app.listen(port, () => {
-    console.log(`Worker ${process.pid}: Serviço iniciado na porta ${port}`);
-  });
-
-  // ===== GRACEFUL SHUTDOWN =====
-  function gracefulShutdown(signal) {
-    console.log(`Worker ${process.pid}: Recebido ${signal}, iniciando graceful shutdown...`);
-    
-    server.close(() => {
-      console.log(`Worker ${process.pid}: HTTP server fechado`);
-      
-      // Fechar conexões DB
-      pgp.end();
-      
-      console.log(`Worker ${process.pid}: Graceful shutdown completo`);
-      process.exit(0);
-    });
-    
-    // Forçar saída após timeout
-    setTimeout(() => {
-      console.log(`Worker ${process.pid}: Forçando saída após timeout`);
-      process.exit(1);
-    }, 10000);
-  }
-
-  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-  
-  // ===== ERROR HANDLER =====
   app.use((err, req, res, next) => {
-    console.error(`Worker ${process.pid}: Erro:`, err.stack);
-    
-    if (!res.headersSent) {
-      res.status(500).json({ 
-        error: 'Erro interno do servidor',
-        timestamp: new Date().toISOString()
-      });
-    }
+    console.error(err.stack);
+    res.status(500).send('Erro no servidor');
   });
 }
