@@ -8,7 +8,7 @@ const cors = require("cors");
 const fs = require('fs');
 const path = require('path');
 const logFile = path.join(__dirname, 'api-access.log');
-const pdfExportRoutes = require('./routes/pdf-export');
+//const pdfExportRoutes = require('./pdf-export');
 
 const numCPUs = os.cpus().length;
 const numWorkers = Math.min(Math.floor(numCPUs / 3), 8);
@@ -57,7 +57,7 @@ if (cluster.isMaster) {
     // }
     next();
   });
-  app.use('/', pdfExportRoutes);
+  //app.use('/', pdfExportRoutes);
 
   app.get('/busca', async (req, res, next) => {
     const { q, lat, lon } = req.query;
