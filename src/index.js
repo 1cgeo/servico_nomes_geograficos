@@ -4,103 +4,130 @@ require('dotenv').config();
 const express = require('express');
 const { query, validationResult } = require('express-validator');
 const pgp = require('pg-promise')();
-const cors = require("cors");
+const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const logFile = path.join(__dirname, 'api-access.log');
 
 const numCPUs = os.cpus().length;
-const numWorkers = Math.min(Math.floor(numCPUs / 3), 8);
+const numWorkers = Math.max(Math.min(Math.floor(numCPUs / 3), 8), 1);
+const MAX_DB_CONNECTIONS = parseInt(process.env.MAX_DB_CONNECTIONS || '80');
+const connectionsPerWorker = Math.max(Math.floor(MAX_DB_CONNECTIONS / numWorkers), 2);
 
-if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
+if (cluster.isPrimary) {
+  console.log(`Primary ${process.pid} is running, spawning ${numWorkers} workers (${connectionsPerWorker} DB connections each)`);
 
-  // Fork workers.
   for (let i = 0; i < numWorkers; i++) {
     cluster.fork();
   }
 
   cluster.on('exit', (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died`);
+    console.log(`Worker ${worker.process.pid} died (${signal || code}), restarting...`);
+    cluster.fork();
   });
 } else {
   const app = express();
   const port = process.env.PORT || 3000;
 
-  const dbConfig = {
+  const db = pgp({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    max: 10,
+    max: connectionsPerWorker,
     idleTimeoutMillis: 30000
-  };
+  });
 
-  const db = pgp(dbConfig);
+  const logStream = fs.createWriteStream(path.join(__dirname, 'api-access.log'), { flags: 'a' });
+  logStream.on('error', (err) => console.error('Erro no log stream:', err));
+
+  function shutdown() {
+    logStream.end();
+    pgp.end();
+    process.exit(0);
+  }
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 
   app.use(cors());
+
   app.use((req, res, next) => {
-    const url = req.originalUrl || req.url;
-    // if (
-    //   url.startsWith('/catalogo-ebgeo2') ||
-    //   url.startsWith('/busca') ||
-    //   url.startsWith('/feicoes') ||
-    //   url.startsWith('/catalogo3d')
-    // ) {
-      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'IP-desconhecido';
-      const logEntry = `[${new Date().toISOString()}] IP: ${ip} - ${req.method} ${url}\n`;
-      fs.appendFile(logFile, logEntry, { flag: 'a' }, (err) => {
-        if (err) console.error('Erro ao escrever log:', err);
-      });
-    // }
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'IP-desconhecido';
+    logStream.write(`[${new Date().toISOString()}] IP: ${ip} - ${req.method} ${req.originalUrl}\n`);
     next();
   });
 
-  app.get('/busca', async (req, res, next) => {
-    const { q, lat, lon } = req.query;
-    
-    if (!q || q.length < 3) {
-      return res.status(400).json({ error: 'Busca deve ter pelo menos 3 caracteres' });
+  app.get('/busca', [
+    query('q').isString().trim().isLength({ min: 3, max: 200 }),
+    query('lat').isFloat(),
+    query('lon').isFloat(),
+    query('zoom').optional().isInt({ min: 1, max: 20 }).toInt()
+  ], async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    if (!lat || !lon) {
-      return res.status(400).json({ error: 'Ponto central (lat, lon) é obrigatório' });
-    }
-
-    const centerLat = parseFloat(lat);
-    const centerLon = parseFloat(lon);
-
-    if (isNaN(centerLat) || isNaN(centerLon)) {
-      return res.status(400).json({ error: 'Ponto central inválido' });
-    }
+    const { q } = req.query;
+    const centerLat = parseFloat(req.query.lat);
+    const centerLon = parseFloat(req.query.lon);
+    const zoom = req.query.zoom ?? null;
 
     try {
       const result = await db.any(`
-        WITH ranked_features AS (
-          SELECT 
-            nome,
-            ST_X(geom) AS longitude,
-            ST_Y(geom) AS latitude,
-            municipio,
-            estado,
-            tipo,
-            similarity(nome, $1) AS name_similarity,
+        WITH q AS (
+          SELECT
+            ng.f_unaccent($1) AS term,
+            CASE WHEN $4::int IS NOT NULL
+              THEN 50000.0 * power(2, 10 - $4::int)
+              ELSE 50000.0
+            END AS decay_dist,
+            CASE WHEN $4::int IS NOT NULL
+              THEN GREATEST(0.0, LEAST(($4::int - 4.0) / 14.0, 1.0))
+              ELSE 0.0
+            END AS zoom_factor
+        ),
+        candidatos AS (
+          SELECT
+            n.nome, n.tipo, n.municipio, n.estado, n.geom, n.tipo_peso, n.cluster_id,
+            ng.f_unaccent(n.nome) AS nome_clean,
+            similarity(ng.f_unaccent(n.nome), q.term) AS sim,
             ST_Distance(
-              geom::geography, 
+              n.geom::geography,
               ST_SetSRID(ST_MakePoint($3, $2), 4674)::geography
-            ) AS distance_to_center
-          FROM ng.nomes_geograficos
-          ORDER BY name_similarity DESC, distance_to_center ASC
-          LIMIT 50
-        )
-        SELECT *,
-          (name_similarity * 0.7 + (1 - LEAST(distance_to_center / 1000000, 1)) * 0.3) AS relevance_score
-        FROM ranked_features
-        ORDER BY relevance_score DESC
+            ) AS dist
+          FROM ng.nomes_geograficos n, q
+          WHERE similarity(ng.f_unaccent(n.nome), q.term) > 0.25
+          ORDER BY sim DESC, dist ASC
+          LIMIT 500
+        ),
+        dedup AS (
+          SELECT DISTINCT ON (nome, tipo, cluster_id)
+            nome, tipo, municipio, estado, sim, dist, tipo_peso, nome_clean,
+            ST_X(geom) AS longitude,
+            ST_Y(geom) AS latitude
+          FROM candidatos
+          ORDER BY nome, tipo, cluster_id, dist ASC
+        ),
+        q_ref AS (SELECT term, decay_dist, zoom_factor FROM q)
+        SELECT
+          d.nome, d.tipo, d.municipio, d.estado, d.longitude, d.latitude,
+          (
+            CASE WHEN lower(d.nome_clean) = lower(q_ref.term)
+              THEN 1.0 ELSE 0.0 END * 0.20
+            + CASE WHEN lower(d.nome_clean) LIKE lower(q_ref.term) || '%'
+              THEN 1.0 ELSE 0.0 END * 0.15
+            + d.sim * 0.20
+            + (1.0 - abs(length(q_ref.term) - length(d.nome_clean))::float
+                    / GREATEST(length(q_ref.term), length(d.nome_clean), 1)) * 0.15
+            + (COALESCE(d.tipo_peso, 0.1) * (1.0 - q_ref.zoom_factor) + 0.5 * q_ref.zoom_factor) * 0.10
+            + (1.0 / (1.0 + d.dist / q_ref.decay_dist)) * 0.20
+          ) AS score
+        FROM dedup d, q_ref
+        ORDER BY score DESC
         LIMIT 5
-      `, [q, centerLat, centerLon]);
-  
+      `, [q, centerLat, centerLon, zoom]);
+
       res.json(result);
     } catch (error) {
       console.error('Erro na query:', error);
@@ -108,55 +135,44 @@ if (cluster.isMaster) {
     }
   });
 
-  app.get('/feicoes', async (req, res, next) => {
-    const { lat, lon, z } = req.query;
-
-    if (!lat || !lon || !z) {
-      return res.status(400).json({ error: 'Coordenadas (lat, lon, z) são obrigatórias' });
+  app.get('/feicoes', [
+    query('lat').isFloat(),
+    query('lon').isFloat(),
+    query('z').isFloat()
+  ], async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    const pointLat = parseFloat(lat);
-    const pointLon = parseFloat(lon);
-    const pointZ = parseFloat(z);
-
-    if (isNaN(pointLat) || isNaN(pointLon) || isNaN(pointZ)) {
-      return res.status(400).json({ error: 'Coordenadas inválidas' });
-    }
+    const pointLat = parseFloat(req.query.lat);
+    const pointLon = parseFloat(req.query.lon);
+    const pointZ = parseFloat(req.query.z);
 
     try {
       const result = await db.any(`
-        WITH click_point AS (
-          SELECT ST_SetSRID(ST_MakePoint($1, $2), 4326) AS geom
-        ),
-        buffered_point AS (
-          SELECT ST_Buffer(geom::geography, 3)::geometry AS geom FROM click_point
-        ),
-        intersecting_edificacoes AS (
-          SELECT 
-            e.id,
-            e.nome,
-            e.municipio,
-            e.estado,
-            e.tipo,
-            e.altitude_base,
-            e.altitude_topo,
-            CASE 
+        WITH intersecting_edificacoes AS (
+          SELECT
+            e.id, e.nome, e.municipio, e.estado, e.tipo,
+            e.altitude_base, e.altitude_topo,
+            CASE
               WHEN $3 < e.altitude_base THEN e.altitude_base - $3
               WHEN $3 > e.altitude_topo THEN $3 - e.altitude_topo
               ELSE 0
             END AS z_distance,
-            ST_Distance(e.geom, c.geom) AS xy_distance
+            ST_Distance(
+              e.geom::geography,
+              ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+            ) AS xy_distance
           FROM ng.edificacoes e
-          INNER JOIN buffered_point bp ON bp.geom && e.geom
-          INNER JOIN click_point c ON c.geom && bp.geom
-          WHERE ST_Intersects(e.geom, bp.geom) AND ST_Intersects(c.geom, bp.geom)
+          WHERE ST_DWithin(e.geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, 3)
         )
         SELECT *
         FROM intersecting_edificacoes
         ORDER BY z_distance ASC, xy_distance ASC
         LIMIT 1
       `, [pointLon, pointLat, pointZ]);
-  
+
       if (result.length === 0) {
         res.json({ message: 'Nenhuma edificação encontrada para as coordenadas fornecidas.' });
       } else {
@@ -177,44 +193,43 @@ if (cluster.isMaster) {
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-  
+
     const { q, page = 1, nr_records = 10 } = req.query;
-    
     const offset = (page - 1) * nr_records;
-    
+
     try {
-      let countQuery = `SELECT COUNT(*) FROM ng.catalogo_3d`;
+      let countQuery = 'SELECT COUNT(*) FROM ng.catalogo_3d';
       let dataQuery = `
-      SELECT id, name, description, thumbnail, url, lon, lat, height, heading, pitch, roll, type, 
-             heightoffset, maximumscreenspaceerror, data_criacao, municipio, estado, palavras_chave, style
+        SELECT id, name, description, thumbnail, url, lon, lat, height, heading, pitch, roll, type,
+               heightoffset, maximumscreenspaceerror, data_criacao, municipio, estado, palavras_chave, style
         FROM ng.catalogo_3d
       `;
-      
+
       const queryParams = [];
-      
+
       if (q) {
         const whereClause = `WHERE search_vector @@ plainto_tsquery('portuguese', $1)`;
         countQuery += ` ${whereClause}`;
         dataQuery += ` ${whereClause}`;
         queryParams.push(q);
       }
-      
+
       dataQuery += `
-        ORDER BY 
-          CASE WHEN $${queryParams.length + 1} IS NOT NULL 
-            THEN ts_rank(search_vector, plainto_tsquery('portuguese', $${queryParams.length + 1})) 
-            ELSE 0 
+        ORDER BY
+          CASE WHEN $${queryParams.length + 1} IS NOT NULL
+            THEN ts_rank(search_vector, plainto_tsquery('portuguese', $${queryParams.length + 1}))
+            ELSE 0
           END DESC,
           data_criacao DESC
         LIMIT $${queryParams.length + 2} OFFSET $${queryParams.length + 3}
       `;
       queryParams.push(q, nr_records, offset);
-  
+
       const [totalCount, data] = await Promise.all([
         db.one(countQuery, q ? [q] : []),
         db.any(dataQuery, queryParams)
       ]);
-  
+
       res.json({
         total: parseInt(totalCount.count),
         page,
@@ -226,13 +241,13 @@ if (cluster.isMaster) {
       next(error);
     }
   });
-  
-  app.listen(port, () => {
-    console.log(`Worker ${process.pid}: Serviço de Nomes Geográficos iniciado na porta ${port}`);
-  });
-  
+
   app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Erro no servidor');
+    res.status(500).json({ error: 'Erro no servidor' });
+  });
+
+  app.listen(port, () => {
+    console.log(`Worker ${process.pid}: Serviço de Nomes Geográficos iniciado na porta ${port}`);
   });
 }

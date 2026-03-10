@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm list:*)",
+      "Bash(python -c \"import sqlite3; print\\('ok'\\)\")",
+      "Bash(python3 -c \"\nimport sqlite3\nconn = sqlite3.connect\\('D:/nomes_geograficos.gpkg'\\)\ncur = conn.cursor\\(\\)\ncur.execute\\(\\\\\"SELECT table_name FROM gpkg_contents\\\\\"\\)\nfor r in cur.fetchall\\(\\):\n    print\\(r\\)\ncur.execute\\(\\\\\"SELECT name FROM sqlite_master WHERE type='table'\\\\\"\\)\nfor r in cur.fetchall\\(\\):\n    print\\('table:', r[0]\\)\nconn.close\\(\\)\n\")",
+      "Bash(python3 -c \"\nimport sqlite3\nconn = sqlite3.connect\\('D:/nomes_geograficos.gpkg'\\)\ncur = conn.cursor\\(\\)\nT = 'nomes_gegoraficos'\n\ncur.execute\\(f'SELECT tipo, COUNT\\(*\\) as cnt FROM {T} GROUP BY tipo ORDER BY cnt DESC'\\)\nrows = cur.fetchall\\(\\)\nprint\\(f'Total distinct tipos: {len\\(rows\\)}'\\)\nprint\\('---ALL TIPOS WITH COUNTS---'\\)\nfor i, \\(tipo, cnt\\) in enumerate\\(rows, 1\\):\n    t = str\\(tipo\\) if tipo else '\\(NULL\\)'\n    print\\(f'{i:3d}. {t:<65s} {cnt:>8,d}'\\)\ntotal = sum\\(r[1] for r in rows\\)\nprint\\(f'---TOTAL RECORDS: {total:,d}---'\\)\nconn.close\\(\\)\n\" 2>&1)"
+    ]
+  }
+}
