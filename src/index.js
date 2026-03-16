@@ -116,8 +116,10 @@ if (cluster.isPrimary) {
             CASE WHEN lower(d.nome_clean) = lower(q_ref.term)
               THEN 1.0 ELSE 0.0 END * 0.20
             + CASE WHEN lower(d.nome_clean) LIKE lower(q_ref.term) || '%'
+              THEN 1.0 ELSE 0.0 END * 0.10
+            + CASE WHEN lower(d.nome_clean) LIKE '%' || lower(q_ref.term) || '%'
               THEN 1.0 ELSE 0.0 END * 0.15
-            + d.sim * 0.20
+            + d.sim * 0.10
             + (1.0 - abs(length(q_ref.term) - length(d.nome_clean))::float
                     / GREATEST(length(q_ref.term), length(d.nome_clean), 1)) * 0.15
             + (COALESCE(d.tipo_peso, 0.1) * (1.0 - q_ref.zoom_factor) + 0.5 * q_ref.zoom_factor) * 0.10
