@@ -29,7 +29,7 @@ Optional: `PORT` (defaults to 3000)
 - `ng.catalogo_3d` — 3D model catalog with Portuguese full-text search via `tsvector`
 
 **API Endpoints**:
-- `GET /busca` — search geographic names by text query + lat/lon. Ranking: exact match (30%) + trigram similarity (25%) + name precision (25%) + type importance (10%) + proximity (10%). Deduplicates by cluster_id so the same real-world entity appears only once.
+- `GET /busca` — search geographic names by text query + lat/lon. Ranking: **three lexicographic keys**, not a weighted sum (see below). Deduplicates by cluster_id so the same real-world entity appears only once.
 - `GET /feicoes` — find closest building at a given lat/lon/z coordinate (3m buffer)
 - `GET /catalogo3d` — paginated 3D catalog search with full-text ranking
 
@@ -37,6 +37,31 @@ Optional: `PORT` (defaults to 3000)
 **Migration for search v2**: `er/migration_busca_v2.sql` (adds cluster_id, tipo_peso, unaccent index)
 **Test data**: `er/insert_teste.sql`
 **ETL pipelines**: FME Workbench files (`er/*.fmw`) for data conversion
+**Manutenção do acervo**: `dev/` (diagnóstico + correção). Ver `dev/README.md`.
+
+## Ranking de `/busca` (2026-07-26)
+
+Era uma soma ponderada de critérios. Hoje é uma ordenação em **três chaves
+lexicográficas**, medida contra um conjunto dourado de 584 casos (aprovação 81,5% →
+92,6%). A doutrina: **vence a feição de maior importância mais próxima do local, com a
+importância sendo CATEGÓRICA** — cidade é muito importante e vem primeiro independente da
+distância, e não existe ranking entre cidades.
+
+As chaves: relevância em faixa (com *containment* valendo casamento pleno) → categoria
+(`tipo_peso >= 1.0`) → combinação de importância e proximidade (gaussiana com platô de
+10 km) → desempate por trigrama.
+
+**Por que não é soma**: numa soma, distância suficiente sempre *compra* a diferença de
+categoria, porque as duas moram na mesma unidade. Uma chave lexicográfica não se compra.
+
+O campo `score` continua saindo em [0,1]: é a tupla codificada numa base que preserva a
+ordem, então `ORDER BY score DESC` é a ordem das chaves. O racional completo está no
+comentário acima da rota em `src/index.js`, e a documentação longa (com as medições e o
+método de calibração) vive no repositório do EBGeo novo, em
+`docs/wiki/ranking-busca-toponimos.md` e `docs/wiki/calibracao-busca-toponimos.md`.
+
+**Este ranking pressupõe o acervo corrigido por `dev/atualizar-acervo.sql`.** Sem a
+correção, 38% das linhas ficam no piso de importância e a chave de categoria vale pouco.
 
 ## Key Dependencies
 
